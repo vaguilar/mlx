@@ -41,6 +41,7 @@ Operations
    expand_dims
    eye
    floor
+   flatten
    full
    greater
    greater_equal
@@ -95,6 +96,9 @@ Operations
    tan
    tanh
    transpose
+   tri
+   tril
+   triu
    var
    where
    zeros

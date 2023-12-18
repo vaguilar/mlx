@@ -58,6 +58,33 @@ TEST_CASE("test reshape") {
   CHECK_EQ(y.shape(), std::vector<int>{1, 5, 0});
 }
 
+TEST_CASE("test flatten") {
+  array x = zeros({2, 3, 4});
+  CHECK_EQ(flatten(x).shape(), std::vector<int>({2 * 3 * 4}));
+
+  CHECK_EQ(flatten(x, 1, 1).shape(), std::vector<int>({2, 3, 4}));
+  CHECK_EQ(flatten(x, 1, 2).shape(), std::vector<int>({2, 3 * 4}));
+  CHECK_EQ(flatten(x, 1, 3).shape(), std::vector<int>({2, 3 * 4}));
+  CHECK_EQ(flatten(x, 1, -1).shape(), std::vector<int>({2, 3 * 4}));
+  CHECK_EQ(flatten(x, -2, -1).shape(), std::vector<int>({2, 3 * 4}));
+  CHECK_EQ(flatten(x, -3, -1).shape(), std::vector<int>({2 * 3 * 4}));
+  CHECK_EQ(flatten(x, -4, -1).shape(), std::vector<int>({2 * 3 * 4}));
+
+  // Check start > end throws
+  CHECK_THROWS(flatten(x, 2, 1));
+
+  // Check start >= ndim throws
+  CHECK_THROWS(flatten(x, 5, 6));
+
+  // Check end < 0 throws
+  CHECK_THROWS(flatten(x, -5, -4));
+
+  // Check scalar flattens to 1D
+  x = array(1);
+  CHECK_EQ(flatten(x, -3, -1).shape(), std::vector<int>({1}));
+  CHECK_EQ(flatten(x, 0, 0).shape(), std::vector<int>({1}));
+}
+
 TEST_CASE("test squeeze and expand") {
   array x = zeros({2, 1, 2, 1, 2, 1});
   CHECK_EQ(squeeze(x).shape(), std::vector<int>{2, 2, 2});
@@ -2029,6 +2056,78 @@ TEST_CASE("test eye") {
   CHECK_EQ(eye_3x2.shape(), std::vector<int>{3, 2});
   auto expected_eye_3x2 = array({1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f}, {3, 2});
   CHECK(array_equal(eye_3x2, expected_eye_3x2).item<bool>());
+}
+
+TEST_CASE("test tri") {
+  auto _tri = tri(4, 4, 0, float32);
+  CHECK_EQ(_tri.shape(), std::vector<int>{4, 4});
+  auto expected_tri = array(
+      {1.0f,
+       0.0f,
+       0.0f,
+       0.0f,
+       1.0f,
+       1.0f,
+       0.0f,
+       0.0f,
+       1.0f,
+       1.0f,
+       1.0f,
+       0.0f,
+       1.0f,
+       1.0f,
+       1.0f,
+       1.0f},
+      {4, 4});
+  CHECK(array_equal(_tri, expected_tri).item<bool>());
+}
+
+TEST_CASE("test tril") {
+  auto _tril = tril(full(std::vector<int>{4, 4}, 2.0f, float32), 0);
+  CHECK_EQ(_tril.shape(), std::vector<int>{4, 4});
+  auto expected_tri = array(
+      {2.0f,
+       0.0f,
+       0.0f,
+       0.0f,
+       2.0f,
+       2.0f,
+       0.0f,
+       0.0f,
+       2.0f,
+       2.0f,
+       2.0f,
+       0.0f,
+       2.0f,
+       2.0f,
+       2.0f,
+       2.0f},
+      {4, 4});
+  CHECK(array_equal(_tril, expected_tri).item<bool>());
+}
+
+TEST_CASE("test triu") {
+  auto _triu = triu(full(std::vector<int>{4, 4}, 2.0f, float32), 0);
+  CHECK_EQ(_triu.shape(), std::vector<int>{4, 4});
+  auto expected_tri = array(
+      {2.0f,
+       2.0f,
+       2.0f,
+       2.0f,
+       0.0f,
+       2.0f,
+       2.0f,
+       2.0f,
+       0.0f,
+       0.0f,
+       2.0f,
+       2.0f,
+       0.0f,
+       0.0f,
+       0.0f,
+       2.0f},
+      {4, 4});
+  CHECK(array_equal(_triu, expected_tri).item<bool>());
 }
 
 TEST_CASE("test identity") {

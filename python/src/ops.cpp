@@ -62,6 +62,33 @@ void init_ops(py::module_& m) {
             array: The reshaped array.
       )pbdoc");
   m.def(
+      "flatten",
+      [](const array& a,
+         int start_axis,
+         int end_axis,
+         const StreamOrDevice& s) { return flatten(a, start_axis, end_axis); },
+      "a"_a,
+      py::pos_only(),
+      "start_axis"_a = 0,
+      "end_axis"_a = -1,
+      py::kw_only(),
+      "stream"_a = none,
+      R"pbdoc(
+      flatten(a: array, /, start_axis: int = 0, end_axis: int = -1, *, stream: Union[None, Stream, Device] = None) -> array
+
+      Flatten an array.
+
+      Args:
+          a (array): Input array.
+          start_axis (int, optional): The first dimension to flatten. Defaults to ``0``.
+          end_axis (int, optional): The last dimension to flatten. Defaults to ``-1``.
+          stream (Stream, optional): Stream or device. Defaults to ``None``
+            in which case the default stream of the default device is used.
+
+      Returns:
+          array: The flattened array.
+  )pbdoc");
+  m.def(
       "squeeze",
       [](const array& a, const IntOrVec& v, const StreamOrDevice& s) {
         if (std::holds_alternative<std::monostate>(v)) {
@@ -1411,6 +1438,72 @@ void init_ops(py::module_& m) {
           array: An identity matrix of size n x n.
       )pbdoc");
   m.def(
+      "tri",
+      [](int n, std::optional<int> m, int k, Dtype dtype, StreamOrDevice s) {
+        return tri(n, m.value_or(n), k, float32, s);
+      },
+      "n"_a,
+      "m"_a = none,
+      "k"_a = 0,
+      "dtype"_a = float32,
+      py::kw_only(),
+      "stream"_a = none,
+      R"pbdoc(
+        tri(n: int, m: int, k: int, dtype: Optional[Dtype] = None, *, stream: Union[None, Stream, Device] = None) -> array
+
+        An array with ones at and below the given diagonal and zeros elsewhere.
+
+        Args:
+          n (int): The number of rows in the output.
+          m (int, optional): The number of cols in the output. Defaults to ``None``.
+          k (int, optional): The diagonal of the 2-D array. Defaults to ``0``.
+          dtype (Dtype, optional): Data type of the output array. Defaults to ``float32``.
+          stream (Stream, optional): Stream or device. Defaults to ``None``.
+
+        Returns:
+          array: Array with its lower triangle filled with ones and zeros elsewhere
+      )pbdoc");
+  m.def(
+      "tril",
+      &tril,
+      "x"_a,
+      "k"_a = 0,
+      py::kw_only(),
+      "stream"_a = none,
+      R"pbdoc(
+      tril(x: array, k: int, *, stream: Union[None, Stream, Device] = None) -> array
+
+        Zeros the array above the given diagonal.
+
+        Args:
+          x (array): input array.
+          k (int, optional): The diagonal of the 2-D array. Defaults to ``0``.
+          stream (Stream, optional): Stream or device. Defaults to ``None``.
+
+        Returns:
+          array: Array zeroed above the given diagonal
+    )pbdoc");
+  m.def(
+      "triu",
+      &triu,
+      "x"_a,
+      "k"_a = 0,
+      py::kw_only(),
+      "stream"_a = none,
+      R"pbdoc(
+      triu(x: array, k: int, *, stream: Union[None, Stream, Device] = None) -> array
+
+        Zeros the array below the given diagonal.
+
+        Args:
+          x (array): input array.
+          k (int, optional): The diagonal of the 2-D array. Defaults to ``0``.
+          stream (Stream, optional): Stream or device. Defaults to ``None``.
+
+        Returns:
+          array: Array zeroed below the given diagonal
+    )pbdoc");
+  m.def(
       "allclose",
       &allclose,
       "a"_a,
@@ -2254,7 +2347,7 @@ void init_ops(py::module_& m) {
       Args:
           arrays (list(array)): A list of arrays to stack.
           axis (int, optional): The axis in the result array along which the
-            input arrays are stacked. Defaults to ``0``. 
+            input arrays are stacked. Defaults to ``0``.
           stream (Stream, optional): Stream or device. Defaults to ``None``.
 
       Returns:

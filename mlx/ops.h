@@ -110,10 +110,28 @@ inline array identity(int n, StreamOrDevice s = {}) {
   return identity(n, float32, s);
 }
 
+array tri(int n, int m, int k, Dtype type, StreamOrDevice s = {});
+inline array tri(int n, Dtype type, StreamOrDevice s = {}) {
+  return tri(n, n, 0, type, s);
+}
+
+array tril(array x, int k, StreamOrDevice s = {});
+array triu(array x, int k, StreamOrDevice s = {});
+
 /** array manipulation */
 
 /** Reshape an array to the given shape. */
 array reshape(const array& a, std::vector<int> shape, StreamOrDevice s = {});
+
+/** Flatten the dimensions in the range `[start_axis, end_axis]` . */
+array flatten(
+    const array& a,
+    int start_axis,
+    int end_axis = -1,
+    StreamOrDevice s = {});
+
+/** Flatten the array to 1D. */
+array flatten(const array& a, StreamOrDevice s = {});
 
 /** Remove singleton dimensions at the given axes. */
 array squeeze(

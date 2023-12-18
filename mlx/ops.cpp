@@ -218,6 +218,28 @@ array identity(int n, Dtype dtype, StreamOrDevice s /* = {} */) {
   return eye(n, n, 0, dtype, s);
 }
 
+array tri(int n, int m, int k, Dtype type, StreamOrDevice s /* = {} */) {
+  auto l = expand_dims(arange(n, s), 1, s);
+  auto r = expand_dims(arange(-k, m - k, s), 0, s);
+  return astype(greater_equal(l, r, s), type, s);
+}
+
+array tril(array x, int k, StreamOrDevice s /* = {} */) {
+  if (x.ndim() < 2) {
+    throw std::invalid_argument("[tril] array must be atleast 2-D");
+  }
+  auto mask = tri(x.shape(-2), x.shape(-1), k, x.dtype(), s);
+  return where(mask, x, zeros_like(x, s), s);
+}
+
+array triu(array x, int k, StreamOrDevice s /* = {} */) {
+  if (x.ndim() < 2) {
+    throw std::invalid_argument("[triu] array must be atleast 2-D");
+  }
+  auto mask = tri(x.shape(-2), x.shape(-1), k - 1, x.dtype(), s);
+  return where(mask, zeros_like(x, s), x, s);
+}
+
 array reshape(
     const array& a,
     std::vector<int> shape,
@@ -253,6 +275,49 @@ array reshape(
   }
   return array(
       shape, a.dtype(), std::make_unique<Reshape>(to_stream(s), shape), {a});
+}
+
+array flatten(
+    const array& a,
+    int start_axis,
+    int end_axis /* = -1 */,
+    StreamOrDevice s /* = {} */) {
+  auto ndim = static_cast<int>(a.ndim());
+  auto start_ax = start_axis + (start_axis < 0 ? ndim : 0);
+  auto end_ax = end_axis + (end_axis < 0 ? ndim : 0);
+  start_ax = std::max(0, start_ax);
+  end_ax = std::min(ndim - 1, end_ax);
+  if (a.ndim() == 0) {
+    return reshape(a, {1}, s);
+  }
+  if (end_ax < start_ax) {
+    throw std::invalid_argument(
+        "[flatten] start_axis must be less than or equal to end_axis");
+  }
+  if (start_ax >= ndim) {
+    std::ostringstream msg;
+    msg << "[flatten] Invalid start_axis " << start_axis << " for array with "
+        << ndim << " dimensions.";
+    throw std::invalid_argument(msg.str());
+  }
+  if (end_ax < 0) {
+    std::ostringstream msg;
+    msg << "[flatten] Invalid end_axis " << end_axis << " for array with "
+        << ndim << " dimensions.";
+    throw std::invalid_argument(msg.str());
+  }
+  if (start_ax == end_ax) {
+    return a;
+  }
+  std::vector<int> new_shape(a.shape().begin(), a.shape().begin() + start_ax);
+  new_shape.push_back(-1);
+  new_shape.insert(
+      new_shape.end(), a.shape().begin() + end_ax + 1, a.shape().end());
+  return reshape(a, new_shape, s);
+}
+
+array flatten(const array& a, StreamOrDevice s /* = {} */) {
+  return flatten(a, 0, a.ndim() - 1, s);
 }
 
 array squeeze(
